@@ -29,3 +29,9 @@ commands:
    unban:
       description: This is used to unban a banned player.
       usage: /<command> <name>
+   vers:
+      description: This is used to unban a banned player.
+      usage: /<command>
+   debug:
+      description: This is used to unban a banned player.
+      usage: /<command>

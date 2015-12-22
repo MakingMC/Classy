@@ -4,15 +4,7 @@ import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Set;
@@ -20,85 +12,17 @@ import java.util.Set;
 public final class Main extends JavaPlugin implements Listener{
 
     private static final String CMD_PREFIX = "Classy.";
+    private MESSAGE_MODE CURRENT_LEVEL;
+    enum MESSAGE_MODE{
+        DEBUG, INFORMATION
+    }
 
     @Override
     public void onEnable(){
+        CURRENT_LEVEL = MESSAGE_MODE.DEBUG;
         getLogger().info("Plugin Enabled!");
     }
-
-
-
-    private void teleportInWorld(Player player, int x, int y, int z){
-        player.teleport(new Location(player.getWorld(), x, y, z));
-    }
-
-    private void openGUI(Player player) {
-        Inventory inv = Bukkit.createInventory(null, 9, ChatColor.DARK_GREEN
-                + "Server selector");
-        ItemStack survival = new ItemStack(Material.DIAMOND_CHESTPLATE);
-        ItemMeta survivalMeta = survival.getItemMeta();
-        ItemStack friends = new ItemStack(Material.DIAMOND);
-        ItemMeta friendsMeta = survival.getItemMeta();
-
-        survivalMeta.setDisplayName(ChatColor.DARK_RED + "Survival");
-        survival.setItemMeta(survivalMeta);
-
-        friendsMeta.setDisplayName(ChatColor.GREEN + "Friends");
-        friends.setItemMeta(friendsMeta);
-
-        inv.setItem(3, friends);
-        inv.setItem(5, survival);
-
-        player.openInventory(inv);
-
-    }
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent event){
-        if(!ChatColor.stripColor(event.getInventory().getName())
-                .equalsIgnoreCase("Server Selector"))
-            return;
-        Player player = (Player) event.getWhoClicked();
-        event.setCancelled(true);
-
-        if(event.getCurrentItem()== null
-                || event.getCurrentItem().getType() == Material.AIR
-                || !event.getCurrentItem().hasItemMeta()){
-            player.closeInventory();
-            return;
-
-        }
-
-        switch(event.getCurrentItem().getType()){
-            case DIAMOND_CHESTPLATE:
-                teleportInWorld(player, 0, 50, 0);
-                player.sendMessage(String.format("%s Teleported to %sSurvival%s!", ChatColor.GOLD, ChatColor.DARK_RED, ChatColor.GOLD));
-
-                break;
-            case DIAMOND:
-                teleportInWorld(player, 0, 50, 0);
-                player.sendMessage(String.format("%s Opened %sFriends%s List!", ChatColor.GOLD, ChatColor.GREEN, ChatColor.GOLD));
-                break;
-            default:
-                player.closeInventory();
-                break;
-        }
-
-    }
-
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        event.getPlayer().getInventory().addItem(new ItemStack(Material.COMPASS));
-    }
-    @EventHandler
-    public void onPlayerInteract(PlayerInteractEvent event) {
-        Action a = event.getAction();
-        ItemStack is = event.getItem();
-
-        if(a == Action.PHYSICAL || is == null || is.getType() == Material.AIR)
-            return;
-        if(is.getType() == Material.COMPASS)
-            openGUI(event.getPlayer());
-    }
+    @Override
     public void onDisable(){
         getLogger().info("Plugin Disabled!");
     }
@@ -115,15 +39,14 @@ public final class Main extends JavaPlugin implements Listener{
         Player player = (Player)sender;
 
         if(args.length > 0)
-            ExecuteCommandWithArgs(command, server, player, args);
-        else
-            ExecuteCommand(command, server, player);
+            ExecuteCommandWithArgs(command, player, args);
+        else ExecuteCommand(command, server, player);
 
         return true;
 
     }
 
-    private void ExecuteCommandWithArgs(String command,Server server, Player player, String[] args) {
+    private void ExecuteCommandWithArgs(String command, Player player, String[] args) {
         //Execute commands that require an argument.
         Player target = Bukkit.getPlayer(args[0]);
         switch (command) {
@@ -132,7 +55,7 @@ public final class Main extends JavaPlugin implements Listener{
                 break;
             case "nick":
                 player.setDisplayName(args[0]);
-                player.sendMessage(ChatColor.GREEN + "You have just changed your name to " + ChatColor.GREEN + args[0]);
+                InfoWrite(player, (ChatColor.GREEN + "You have just changed your name to " + ChatColor.GREEN + args[0]));
                 break;
             case "ban":
 
@@ -140,23 +63,36 @@ public final class Main extends JavaPlugin implements Listener{
                     target.setBanned(true);
                     target.kickPlayer(String.format("%sYou have been banned", ChatColor.RED));
                 }
+
                 else{
-                    player.sendMessage(String.format("%sThat player has not been online", ChatColor.RED));
+                    if(Bukkit.getOfflinePlayer(args[0]) != null){
+
+                        OfflinePlayer offlinetarget = Bukkit.getOfflinePlayer(args[0]);
+                        offlinetarget.setBanned(true);
+                    }
+                    InfoWrite(player, String.format("%sThat player has not been online", ChatColor.RED));
                 }
                 break;
             case "unban":
                 try {
+                    String tp = args[0].toLowerCase().trim();
+                    DebugWrite(player, String.format("Looking for player %s", tp));
                     Set<OfflinePlayer> players = Bukkit.getBannedPlayers();
+
                     for (OfflinePlayer offlinePlayer : players) {
-                        if (offlinePlayer.getName().toLowerCase().equals(args[0])) {
+
+                        DebugWrite(player, String.format("Found %s", offlinePlayer.getName()));
+                        if (offlinePlayer.getName().toLowerCase().trim().contains(tp)) {
                             offlinePlayer.setBanned(false);
-                        } else {
-                            player.sendMessage(String.format("%sThat player has not been online", ChatColor.RED));
+                            InfoWrite(player, String.format("You have unbanned %s. and there were %s other banned players", tp , players.size() ));
                         }
+                    }
+                    if ((players == null) || (players.size()==0)){
+                        InfoWrite(player, ("Wrong lady"));
                     }
                 }
                 catch(Exception ex) {
-                    player.sendMessage(ex.getMessage());
+                    InfoWrite(player,(ex.getMessage()));
                 }
 
                 break;
@@ -164,31 +100,65 @@ public final class Main extends JavaPlugin implements Listener{
                 break;
         }
     }
+    private void DebugWrite(Player player, String message){
+        if(CURRENT_LEVEL == MESSAGE_MODE.DEBUG)
+        player.sendMessage(message);
+    }
+    private void DebugWrite(Player player, String message, MESSAGE_MODE mode){
+        switch(mode){
+            case DEBUG:
+                    DebugWrite(player, String.format("%s" + message , ChatColor.BLUE ));
+                break;
+            case INFORMATION:
+                DebugWrite(player, String.format("%s" + message , ChatColor.LIGHT_PURPLE ));
+                break;
+            default:
+                break;
+        }
+
+    }
+    private void InfoWrite(Player player, String message){
+        DebugWrite(player, message, MESSAGE_MODE.INFORMATION);
+    }
 
     private void ExecuteCommand(String command,Server server, Player player) {
         //Execute all other commands.
         switch (command) {
             case "making":
-                player.sendMessage("Hai bb");
+                InfoWrite(player, ("Hai bb"));
                 break;
             case "bp":
-                player.sendMessage(String.format("%s"));
+                InfoWrite(player, String.format("%s", Bukkit.getBannedPlayers()));
                 break;
             case "test":
                 player.sendRawMessage(String.format("Hey, the item you are holding's durability is %s", player.getItemInHand().getDurability()));
                 break;
+            case "vers":
+                InfoWrite(player, String.format("%sYou are running version 2.0 of Classy", ChatColor.GREEN));
+                break;
             case "fly":
                 if(!player.getAllowFlight()){
-                    player.sendMessage(String.format("%sYou are now flying!", ChatColor.GOLD));
+                    InfoWrite(player, String.format("%sYou are now flying!", ChatColor.GOLD));
                     player.setAllowFlight(true);
                     player.setFlying(true);
                 }
                 else {
-                    player.sendMessage(String.format("%sYou are no longer flying!", ChatColor.GOLD));
+                    InfoWrite(player, String.format("%sYou are no longer flying!", ChatColor.GOLD));
                     player.setAllowFlight(false);
                     player.setFlying(false);
                 }
                 break;
+            case "debug":
+                if(CURRENT_LEVEL == MESSAGE_MODE.DEBUG) {
+                    CURRENT_LEVEL = MESSAGE_MODE.INFORMATION;
+                    InfoWrite(player, "You have toggled Debug mode off.");
+
+                }
+                else{
+                    CURRENT_LEVEL = MESSAGE_MODE.DEBUG;
+                    InfoWrite(player, "You have toggled Debug mode on.");
+                }
+            break;
             default:
                 break;
         }
@@ -198,14 +168,13 @@ public final class Main extends JavaPlugin implements Listener{
         try {
 
             if (!(possiblePlayer instanceof Player)) {
-                possiblePlayer.sendMessage("Only players can use this command!");
                 return false;
             }
             Player player = (Player)possiblePlayer;
 
             if (player.hasPermission(reqPermission) || player.isOp()) return true;
 
-            player.sendMessage(String.format("You do not have permission %s or you are not Op.", reqPermission));
+            InfoWrite(player, String.format("You do not have permission %s or you are not Op.", reqPermission));
             return false;
         } catch (Exception ex) {
             return false;
