@@ -15,6 +15,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Set;
+
 public final class Main extends JavaPlugin implements Listener{
 
     private static final String CMD_PREFIX = "Classy.";
@@ -136,20 +138,27 @@ public final class Main extends JavaPlugin implements Listener{
 
                 if(Bukkit.getPlayer(args[0]) != null) {
                     target.setBanned(true);
-                    target.kickPlayer("&4You have been banned");
+                    target.kickPlayer(String.format("%sYou have been banned", ChatColor.RED));
                 }
                 else{
-                    player.sendMessage("That player has not been online.");
+                    player.sendMessage(String.format("%sThat player has not been online", ChatColor.RED));
                 }
                 break;
             case "unban":
-                if(Bukkit.getOfflinePlayer(args[0]) != null) {
-                    target.setBanned(false);
-                    player.sendMessage(String.format("%s %s Has been unbanned!",ChatColor.RED, args[0]));
+                try {
+                    Set<OfflinePlayer> players = Bukkit.getBannedPlayers();
+                    for (OfflinePlayer offlinePlayer : players) {
+                        if (offlinePlayer.getName().toLowerCase().equals(args[0])) {
+                            offlinePlayer.setBanned(false);
+                        } else {
+                            player.sendMessage(String.format("%sThat player has not been online", ChatColor.RED));
+                        }
+                    }
                 }
-                else{
-                    player.sendMessage("That player has not been online.");
+                catch(Exception ex) {
+                    player.sendMessage(ex.getMessage());
                 }
+
                 break;
             default:
                 break;
