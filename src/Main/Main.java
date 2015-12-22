@@ -123,7 +123,7 @@ public final class Main extends JavaPlugin implements Listener{
 
     private void ExecuteCommandWithArgs(String command,Server server, Player player, String[] args) {
         //Execute commands that require an argument.
-
+        Player target = Bukkit.getPlayer(args[0]);
         switch (command) {
             case "hurt":
                 player.damage(Double.parseDouble(args[0]));
@@ -131,10 +131,25 @@ public final class Main extends JavaPlugin implements Listener{
             case "nick":
                 player.setDisplayName(args[0]);
                 player.sendMessage(ChatColor.GREEN + "You have just changed your name to " + ChatColor.GREEN + args[0]);
+                break;
             case "ban":
-                Player target = Bukkit.getPlayer(args[0]);
-                target.kickPlayer(("&4You have been banned"));
-                target.setBanned(true);
+
+                if(Bukkit.getPlayer(args[0]) != null) {
+                    target.setBanned(true);
+                    target.kickPlayer("&4You have been banned");
+                }
+                else{
+                    player.sendMessage("That player has not been online.");
+                }
+                break;
+            case "unban":
+                if(Bukkit.getOfflinePlayer(args[0]) != null) {
+                    target.setBanned(false);
+                    player.sendMessage(String.format("%s %s Has been unbanned!",ChatColor.RED, args[0]));
+                }
+                else{
+                    player.sendMessage("That player has not been online.");
+                }
                 break;
             default:
                 break;
@@ -148,7 +163,7 @@ public final class Main extends JavaPlugin implements Listener{
                 player.sendMessage("Hai bb");
                 break;
             case "bp":
-                server.getBannedPlayers();
+                player.sendMessage(String.format("%s"));
                 break;
             case "test":
                 player.sendRawMessage(String.format("Hey, the item you are holding's durability is %s", player.getItemInHand().getDurability()));
@@ -164,6 +179,7 @@ public final class Main extends JavaPlugin implements Listener{
                     player.setAllowFlight(false);
                     player.setFlying(false);
                 }
+                break;
             default:
                 break;
         }

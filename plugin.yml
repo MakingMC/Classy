@@ -24,5 +24,8 @@ commands:
       description: This is a demo command.
       usage: /<command>
    ban:
-      description: This is a demo command.
+      description: This is used to ban a player.
+      usage: /<command> <name>
+   unban:
+      description: This is used to unban a banned player.
       usage: /<command> <name>
