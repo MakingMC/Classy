@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component inherit-compiler-output="true" inheritJdk="true">
+	<output-test url="file://$MODULE_DIR$/out/test/Classy"/>
+	<exclude-output/>
+	<contentEntry url="file://$MODULE_DIR$"/>
+	<lib name="bukkit-1.7.10-R0.1-20140817.175650-8.jar" scope="COMPILE">
+		<srcroot url="jar://$USER_HOME$/Desktop/bukkit-1.7.10-R0.1-20140817.175650-8.jar!/"/>
+	</lib>
+</component>

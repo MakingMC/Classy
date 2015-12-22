@@ -1,0 +1,28 @@
+name: Classy
+main: Main.Main
+version: 1
+commands:
+   Making:
+      description: This is a demo command.
+      usage: /<command>
+   Hurt:
+      description: This is a demo command.
+      usage: /<command>
+   nick:
+      description: This is a demo command.
+      usage: /<command> [player]
+   test:
+      description: This is a demo command.
+      usage: /<command> [player]
+   i:
+      description: This is a demo command.
+      usage: /<command> [name] [amount]
+   fly:
+      description: This is a demo command.
+      usage: /<command>
+   bp:
+      description: This is a demo command.
+      usage: /<command>
+   ban:
+      description: This is a demo command.
+      usage: /<command> <name>

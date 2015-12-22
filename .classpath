@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="var" path="USER_HOME/Desktop/bukkit-1.7.10-R0.1-20140817.175650-8.jar" sourcepath="/USER_HOME/Desktop/bukkit-1.7.10-R0.1-20140817.175650-8.jar"/>
+	<classpathentry kind="output" path="out/production/Classy"/>
+</classpath>
