@@ -1,9 +1,6 @@
 package Main;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -19,14 +16,20 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public final class Main extends JavaPlugin implements Listener{
+
+    private static final String CMD_PREFIX = "Classy.";
+
     @Override
     public void onEnable(){
         getLogger().info("Plugin Enabled!");
     }
 
+
+
     private void teleportInWorld(Player player, int x, int y, int z){
         player.teleport(new Location(player.getWorld(), x, y, z));
     }
+
     private void openGUI(Player player) {
         Inventory inv = Bukkit.createInventory(null, 9, ChatColor.DARK_GREEN
                 + "Server selector");
@@ -97,83 +100,90 @@ public final class Main extends JavaPlugin implements Listener{
     public void onDisable(){
         getLogger().info("Plugin Disabled!");
     }
+
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        Player player = (Player) sender;
-        if (cmd.getLabel().equalsIgnoreCase("Making") && player.hasPermission("classy.making") || player.isOp()){
-            if (!(sender instanceof Player)) {
-                sender.sendMessage("Only players can use this command!");
-                return true;
-            }
-            player.sendMessage("Hai bb");
-        }
+        String command = label.toLowerCase();
+        String reqPermission = CMD_PREFIX + command;
+        Server server = sender.getServer();
 
-        if (cmd.getLabel().equalsIgnoreCase("Hurt")){
-            if (!(sender instanceof Player)) {
-                sender.sendMessage("Only players can use this command!");
-                return true;
-            }
+        //commands in this plugin require the Op or special command permissions
+        if(!(isValidCommandAndUser(sender, reqPermission))) return true;
 
-            player.damage(1);
-        }
-        if (cmd.getLabel().equalsIgnoreCase("nick") && args.length == 1){
-            if (!(sender instanceof Player)) {
-                sender.sendMessage("Only players can use this command!");
-                return true;
-            }
+        //Now we know it is a safe player, then cast player to an object
+        Player player = (Player)sender;
 
-            player.setDisplayName(args[0]);
-            player.sendMessage(ChatColor.GREEN + "You have just changed your name to " + ChatColor.GREEN + args[0]);
-
-
-        }
-
-        if (cmd.getLabel().equalsIgnoreCase("bp") && args.length == 1){
-            if (!(sender instanceof Player)) {
-                sender.sendMessage("Only players can use this command!");
-                return true;
-            }
-            sender.getServer().getBannedPlayers();
-        }
-        if (cmd.getLabel().equalsIgnoreCase("ban") && args.length == 1){
-            if (!(sender instanceof Player)) {
-                sender.sendMessage("Only players can use this command!");
-                return true;
-            }
-
-
-
-
-
-        }
-        if (cmd.getLabel().equalsIgnoreCase("test")&& args.length == 0){
-            if (!(sender instanceof Player)) {
-                sender.sendMessage("Only players can use this command!");
-                return true;
-            }
-            player.sendRawMessage(String.format("Hey, the item you are holding's durability is %s", player.getItemInHand().getDurability()));
-
-        }
-        if (cmd.getLabel().equalsIgnoreCase("fly")){
-            if (!(sender instanceof Player)) {
-                sender.sendMessage("Only players can use this command!");
-                return true;
-            }
-            if(!player.getAllowFlight()){
-                player.sendMessage(String.format("%sYou are now flying!", ChatColor.GOLD));
-                player.setAllowFlight(true);
-                player.setFlying(true);
-
-            }
-            else if(player.getAllowFlight()){
-                player.sendMessage(String.format("%sYou are no longer flying!", ChatColor.GOLD));
-                player.setAllowFlight(false);
-                player.setFlying(false);
-
-            }
-
-        }
-
+        if(args.length > 0)
+            ExecuteCommandWithArgs(command, server, player, args);
+        else
+            ExecuteCommand(command, server, player);
 
         return true;
+
+    }
+
+    private void ExecuteCommandWithArgs(String command,Server server, Player player, String[] args) {
+        //Execute commands that require an argument.
+
+        switch (command) {
+            case "hurt":
+                player.damage(Double.parseDouble(args[0]));
+                break;
+            case "nick":
+                player.setDisplayName(args[0]);
+                player.sendMessage(ChatColor.GREEN + "You have just changed your name to " + ChatColor.GREEN + args[0]);
+            case "ban":
+                Player target = Bukkit.getPlayer(args[0]);
+                target.kickPlayer(("&4You have been banned"));
+                target.setBanned(true);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private void ExecuteCommand(String command,Server server, Player player) {
+        //Execute all other commands.
+        switch (command) {
+            case "making":
+                player.sendMessage("Hai bb");
+                break;
+            case "bp":
+                server.getBannedPlayers();
+                break;
+            case "test":
+                player.sendRawMessage(String.format("Hey, the item you are holding's durability is %s", player.getItemInHand().getDurability()));
+                break;
+            case "fly":
+                if(!player.getAllowFlight()){
+                    player.sendMessage(String.format("%sYou are now flying!", ChatColor.GOLD));
+                    player.setAllowFlight(true);
+                    player.setFlying(true);
+                }
+                else {
+                    player.sendMessage(String.format("%sYou are no longer flying!", ChatColor.GOLD));
+                    player.setAllowFlight(false);
+                    player.setFlying(false);
+                }
+            default:
+                break;
+        }
+    }
+
+    private boolean isValidCommandAndUser(CommandSender possiblePlayer, String reqPermission) {
+        try {
+
+            if (!(possiblePlayer instanceof Player)) {
+                possiblePlayer.sendMessage("Only players can use this command!");
+                return false;
+            }
+            Player player = (Player)possiblePlayer;
+
+            if (player.hasPermission(reqPermission) || player.isOp()) return true;
+
+            player.sendMessage(String.format("You do not have permission %s or you are not Op.", reqPermission));
+            return false;
+        } catch (Exception ex) {
+            return false;
+        }
     }
 }
