@@ -5,6 +5,10 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Set;
@@ -16,6 +20,8 @@ public final class Main extends JavaPlugin implements Listener{
     enum MESSAGE_MODE{
         DEBUG, INFORMATION
     }
+
+
 
     @Override
     public void onEnable(){
@@ -59,13 +65,11 @@ public final class Main extends JavaPlugin implements Listener{
                 break;
             case "ban":
 
-                if(Bukkit.getPlayer(args[0]) != null) {
+                if (Bukkit.getPlayer(args[0]) != null) {
                     target.setBanned(true);
                     target.kickPlayer(String.format("%sYou have been banned", ChatColor.RED));
-                }
-
-                else{
-                    if(Bukkit.getOfflinePlayer(args[0]) != null){
+                } else {
+                    if (Bukkit.getOfflinePlayer(args[0]) != null) {
 
                         OfflinePlayer offlinetarget = Bukkit.getOfflinePlayer(args[0]);
                         offlinetarget.setBanned(true);
@@ -84,16 +88,28 @@ public final class Main extends JavaPlugin implements Listener{
                         DebugWrite(player, String.format("Found %s", offlinePlayer.getName()));
                         if (offlinePlayer.getName().toLowerCase().trim().contains(tp)) {
                             offlinePlayer.setBanned(false);
-                            InfoWrite(player, String.format("You have unbanned %s. and there were %s other banned players", tp , players.size() ));
+                            InfoWrite(player, String.format("You have unbanned %s. and there were %s other banned players", tp, players.size()));
                         }
                     }
-                    if ((players == null) || (players.size()==0)){
+                    if ((players == null) || (players.size() == 0)) {
                         InfoWrite(player, ("Wrong lady"));
                     }
+                } catch (Exception ex) {
+                    InfoWrite(player, (ex.getMessage()));
                 }
-                catch(Exception ex) {
-                    InfoWrite(player,(ex.getMessage()));
-                }
+
+                break;
+            case "trade":
+                InfoWrite(player, player.getItemInHand().getItemMeta().getDisplayName());
+                //ItemMeta itemMetadata = player.getItemInHand().getItemMeta();
+
+                if (player.getItemInHand() instanceof ItemStack) {
+                    ItemStack stack = player.getItemInHand();
+                    if (stack.getAmount() > 1 && args[0] == null)
+                        stack.setAmount(stack.getAmount() - 1);
+                } else
+                    player.setItemInHand(null);
+
 
                 break;
             default:
@@ -110,7 +126,7 @@ public final class Main extends JavaPlugin implements Listener{
                     DebugWrite(player, String.format("%s" + message , ChatColor.BLUE ));
                 break;
             case INFORMATION:
-                DebugWrite(player, String.format("%s" + message , ChatColor.LIGHT_PURPLE ));
+                    DebugWrite(player, String.format("%s" + message , ChatColor.LIGHT_PURPLE ));
                 break;
             default:
                 break;
@@ -121,14 +137,26 @@ public final class Main extends JavaPlugin implements Listener{
         DebugWrite(player, message, MESSAGE_MODE.INFORMATION);
     }
 
+
+
+
     private void ExecuteCommand(String command,Server server, Player player) {
         //Execute all other commands.
         switch (command) {
             case "making":
                 InfoWrite(player, ("Hai bb"));
                 break;
+
             case "bp":
                 InfoWrite(player, String.format("%s", Bukkit.getBannedPlayers()));
+                break;
+
+            case "friends":
+                Inventory anv = Bukkit.createInventory(null, InventoryType.ANVIL, "s");
+                player.openInventory(anv);
+                ItemStack is = new ItemStack(Material.DIAMOND);
+                anv.addItem(is);
+
                 break;
             case "test":
                 player.sendRawMessage(String.format("Hey, the item you are holding's durability is %s", player.getItemInHand().getDurability()));
@@ -150,8 +178,9 @@ public final class Main extends JavaPlugin implements Listener{
                 break;
             case "debug":
                 if(CURRENT_LEVEL == MESSAGE_MODE.DEBUG) {
-                    CURRENT_LEVEL = MESSAGE_MODE.INFORMATION;
                     InfoWrite(player, "You have toggled Debug mode off.");
+                    CURRENT_LEVEL = MESSAGE_MODE.INFORMATION;
+
 
                 }
                 else{

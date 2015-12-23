@@ -35,3 +35,9 @@ commands:
    debug:
       description: This is used to unban a banned player.
       usage: /<command>
+   trade:
+      description: This is used to unban a banned player.
+      usage: /<command>
+   friends:
+      description: This is used to unban a banned player.
+      usage: /<command>
